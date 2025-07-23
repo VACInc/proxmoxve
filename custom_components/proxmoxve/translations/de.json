@@ -136,7 +136,7 @@
                 "description": "Proxmox Host-Informationen"
             },
             "change_expose": {
-                "description": "Select the Proxmox instance nodes and Virtual Machines (QEMU) and Containers (LXC) you want to expose",
+                "description": "Wähle die Proxmox-Instanz-Knoten, virtuellen Maschinen (QEMU) und Container (LXC), die du bereitstellen möchtest",
                 "data": {
                     "lxc": "Linux-Container (LXC)",
                     "nodes": "Knoten",
@@ -245,19 +245,19 @@
                 "name": "Life left"
             },
             "zfs_health": {
-                "name": "Health"
+                "name": "Zustand"
             },
             "zfs_free_perc": {
-                "name": "Free percentage"
+                "name": "Prozent freier Speicher"
             },
             "zfs_total": {
-                "name": "Total"
+                "name": "Speicher gesamt"
             },
             "zfs_used": {
-                "name": "Used"
+                "name": "Speicher belegt"
             },
             "zfs_used_perc": {
-                "name": "Used percentage"
+                "name": "Prozent belegter Speicher"
             },
             "lxc_on": {
                 "name": "Container laufen",
