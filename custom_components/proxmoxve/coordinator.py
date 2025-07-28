@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 import time
-from datetime import datetime, timedelta, timezone
-from zoneinfo import ZoneInfo
+from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, Any
+from zoneinfo import ZoneInfo
 
 from homeassistant.const import CONF_HOST, CONF_USERNAME
 from homeassistant.exceptions import ConfigEntryAuthFailed
@@ -927,9 +927,9 @@ class ProxmoxTaskCoordinator(ProxmoxCoordinator):
             ):
                 # Convert timestamps to readable dates in Home Assistant's timezone
                 tz = ZoneInfo(str(self.hass.config.time_zone))
-                starttime_str = datetime.fromtimestamp(
-                    task_starttime, tz=tz
-                ).strftime("%Y-%m-%d %H:%M:%S")
+                starttime_str = datetime.fromtimestamp(task_starttime, tz=tz).strftime(
+                    "%Y-%m-%d %H:%M:%S"
+                )
                 endtime_str = (
                     datetime.fromtimestamp(task_endtime, tz=tz).strftime(
                         "%Y-%m-%d %H:%M:%S"
