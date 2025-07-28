@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 import time
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
+from zoneinfo import ZoneInfo
 from typing import TYPE_CHECKING, Any
 
 from homeassistant.const import CONF_HOST, CONF_USERNAME
@@ -924,14 +925,15 @@ class ProxmoxTaskCoordinator(ProxmoxCoordinator):
                 and task_starttime > twenty_four_hours_ago
                 and task_status != ""  # Ignore tasks with empty status
             ):
-                # Convert timestamps to readable dates
+                # Convert timestamps to readable dates in Home Assistant's timezone
+                tz = ZoneInfo(str(self.hass.config.time_zone))
                 starttime_str = datetime.fromtimestamp(
-                    task_starttime, tz=datetime.timezone.utc
+                    task_starttime, tz=tz
                 ).strftime("%Y-%m-%d %H:%M:%S")
                 endtime_str = (
-                    datetime.fromtimestamp(
-                        task_endtime, tz=datetime.timezone.utc
-                    ).strftime("%Y-%m-%d %H:%M:%S")
+                    datetime.fromtimestamp(task_endtime, tz=tz).strftime(
+                        "%Y-%m-%d %H:%M:%S"
+                    )
                     if task_endtime > 0
                     else "N/A"
                 )
