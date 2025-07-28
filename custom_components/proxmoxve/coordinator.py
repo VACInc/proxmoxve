@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from datetime import timedelta
+import time
+from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, Any
 
 from homeassistant.const import CONF_HOST, CONF_USERNAME
@@ -30,6 +31,7 @@ from .models import (
     ProxmoxLXCData,
     ProxmoxNodeData,
     ProxmoxStorageData,
+    ProxmoxTaskData,
     ProxmoxUpdateData,
     ProxmoxVMData,
     ProxmoxZFSData,
@@ -46,8 +48,10 @@ class ProxmoxCoordinator(
         | ProxmoxLXCData
         | ProxmoxNodeData
         | ProxmoxStorageData
+        | ProxmoxTaskData
         | ProxmoxUpdateData
         | ProxmoxVMData
+        | ProxmoxZFSData
     ]
 ):
     """Proxmox VE data update coordinator."""
@@ -738,7 +742,7 @@ class ProxmoxDiskCoordinator(ProxmoxCoordinator):
                 or ("serial" in disk and disk["serial"] == self.resource_id)
             ):
                 disk_attributes = {}
-                api_path = f"nodes/{self.node_name}/disks/smart?disk={disk["devpath"]}"
+                api_path = f"nodes/{self.node_name}/disks/smart?disk={disk['devpath']}"
                 try:
                     disk_attributes_api = await self.hass.async_add_executor_job(
                         poll_api,
@@ -851,6 +855,110 @@ class ProxmoxDiskCoordinator(ProxmoxCoordinator):
         raise UpdateFailed(msg)
 
 
+class ProxmoxTaskCoordinator(ProxmoxCoordinator):
+    """Proxmox VE Task data update coordinator."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        proxmox: ProxmoxAPI,
+        api_category: str,
+        node_name: str,
+    ) -> None:
+        """Initialize the Proxmox Task coordinator."""
+        super().__init__(
+            hass,
+            LOGGER,
+            name=f"proxmox_coordinator_{api_category}_{node_name}",
+            update_interval=timedelta(seconds=300),  # 5 minutes
+        )
+
+        self.hass = hass
+        self.config_entry: ConfigEntry = self.config_entry
+        self.proxmox = proxmox
+        self.node_name = node_name
+        self.resource_id = node_name
+
+    async def _async_update_data(self) -> ProxmoxTaskData:
+        """Update data for Proxmox Tasks."""
+        if self.node_name is not None:
+            api_path = f"nodes/{self.node_name}/tasks"
+            api_status = await self.hass.async_add_executor_job(
+                poll_api,
+                self.hass,
+                self.config_entry,
+                self.proxmox,
+                api_path,
+                ProxmoxType.Tasks,
+                self.resource_id,
+            )
+        else:
+            msg = f"{self.resource_id} node not found"
+            raise UpdateFailed(msg)
+
+        if api_status is None:
+            return ProxmoxTaskData(
+                type=ProxmoxType.Tasks,
+                node=self.node_name,
+                failed_count=0,
+                recent_failures=UNDEFINED,
+                last_failure_time=UNDEFINED,
+            )
+
+        # Filter for failed tasks in the last 24 hours (86400 seconds)
+        current_time = int(time.time())
+        twenty_four_hours_ago = current_time - 86400
+
+        failed_tasks = []
+        for task in api_status:
+            # Task is considered failed if:
+            # 1. status is not "OK" (for completed tasks)
+            # 2. status is not "running" (for active tasks)
+            # 3. starttime is within last 24 hours
+            task_status = task.get("status", "")
+            task_starttime = int(task.get("starttime", 0))
+            task_endtime = int(task.get("endtime", 0))
+
+            if (
+                task_status not in ("OK", "running")
+                and task_starttime > twenty_four_hours_ago
+                and task_status != ""  # Ignore tasks with empty status
+            ):
+                # Convert timestamps to readable dates
+                starttime_str = datetime.fromtimestamp(
+                    task_starttime, tz=datetime.timezone.utc
+                ).strftime("%Y-%m-%d %H:%M:%S")
+                endtime_str = (
+                    datetime.fromtimestamp(
+                        task_endtime, tz=datetime.timezone.utc
+                    ).strftime("%Y-%m-%d %H:%M:%S")
+                    if task_endtime > 0
+                    else "N/A"
+                )
+
+                failed_tasks.append(
+                    {
+                        "type": task.get("type", "unknown"),
+                        "starttime": starttime_str,
+                        "endtime": endtime_str,
+                        "status": task_status,
+                    }
+                )
+
+        # Sort by start time (most recent first) and limit to 10 recent failures
+        failed_tasks.sort(key=lambda x: x["starttime"], reverse=True)
+        recent_failures = failed_tasks[:10] if failed_tasks else UNDEFINED
+        last_failure_time = failed_tasks[0]["endtime"] if failed_tasks else UNDEFINED
+
+        return ProxmoxTaskData(
+            type=ProxmoxType.Tasks,
+            node=self.node_name,
+            failed_count=len(failed_tasks),
+            recent_failures=recent_failures,
+            last_failure_time=last_failure_time,
+        )
+
+
 def update_device_via(
     self,
     api_category: ProxmoxType,
@@ -916,6 +1024,8 @@ def poll_api(
             case ProxmoxType.Update:
                 return f"['perm','/nodes/{resource_id}',['Sys.Modify']]"
             case ProxmoxType.Disk:
+                return f"['perm','/nodes/{resource_id}',['Sys.Audit']]"
+            case ProxmoxType.Tasks:
                 return f"['perm','/nodes/{resource_id}',['Sys.Audit']]"
             case _:
                 return "Unmapped"
