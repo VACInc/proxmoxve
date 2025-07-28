@@ -13,8 +13,22 @@ After configuring this integration, the following information is available:
 
  - Binary sensor entities with the status of node and selected virtual machines/containers.
  - Sensor entities of the selected node and virtual machines/containers. Some sensors are created disabled by default, you can enable them by accessing the entity's configuration.
+ - **Failed task monitoring sensors** that track failed tasks from the last 24 hours on selected nodes, showing the count of failures and details about recent failed tasks.
  - Entities button to control selected virtual machines/containers (see about Proxmox user permissions below). By default, the entities buttons to control virtual machines/containers are created disabled, [see how to enable them here](https://github.com/dougiteixeira/proxmoxve/#disabled-entities).
 
+### Failed Task Monitoring
+
+The integration provides sensors that monitor failed tasks on your Proxmox nodes over the last 24 hours. These sensors offer:
+
+- **Failed Task Count**: Shows the number of failed tasks per node
+- **Recent Failure Details**: Displays information about recent failed tasks including:
+  - Task type (backup, migration, etc.)
+  - Start and end timestamps (in your local timezone)
+  - Task status
+- **Configurable**: Can be enabled or disabled during integration setup or via integration options
+- **Automatic Updates**: Refreshes every 5 minutes to provide up-to-date information
+
+The failed task sensors help you monitor the health of your Proxmox operations and quickly identify when automated tasks encounter issues.
 
 > [!IMPORTANT]  
 > See the section on Proxmox user permissions [here](https://github.com/dougiteixeira/proxmoxve#proxmox-permissions).
