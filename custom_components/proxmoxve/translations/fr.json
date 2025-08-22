@@ -175,7 +175,7 @@
                 "name": "État"
             },
             "health": {
-                "name": "Health"
+                "name": "Santé"
             },
             "update_avail": {
                 "name": "Mises à jour de paquets"
@@ -239,7 +239,7 @@
                 "name": "Disque utilisé en pourcentage"
             },
             "disk_wearout": {
-                "name": "Wearout"
+                "name": "Usure"
             },
             "life_left": {
                 "name": "Vie restante"
@@ -295,7 +295,7 @@
                 "name": "Nombre d'allumages"
             },
             "power_loss": {
-                "name": "Unexpected power loss"
+                "name": "Perte de puissance inattendue"
             },
             "power_hours": {
                 "name": "Heures de fonctionnement"
@@ -309,7 +309,7 @@
                 }
             },
             "status_raw": {
-                "name": "Status",
+                "name": "Statut",
                 "state": {
                     "internal-error": "Erreur interne",
                     "prelaunch": "Pré-démarrage",
