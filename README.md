@@ -230,6 +230,8 @@ Some entities are disabled by default (including control buttons), see below how
    For the entity to appear enabled on the device page, it may be necessary to refresh the page.
    </details>
 
+> [!NOTE]
+> The Wake on LAN button only works if the configured node is in a cluster of two or more nodes. If you want to use WOL on a single Node, use the official `Wake-On-Lan` integration.
 
 ## Translations
 [![Crowdin](https://badges.crowdin.net/proxmoxve-homeassistant/localized.svg)](https://crowdin.com/project/proxmoxve-homeassistant)
