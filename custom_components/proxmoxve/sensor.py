@@ -565,6 +565,19 @@ PROXMOX_SENSOR_ZFS: Final[tuple[ProxmoxSensorEntityDescription, ...]] = (
     ),
 )
 
+PROXMOX_SENSOR_TASKS: Final[tuple[ProxmoxSensorEntityDescription, ...]] = (
+    ProxmoxSensorEntityDescription(
+        key="failed_tasks_count",
+        name="Failed tasks",
+        icon="mdi:alert-circle",
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        extra_attrs=["recent_failures", "last_failure_time"],
+        translation_key="failed_tasks_count",
+        value_fn=lambda x: x.failed_count,
+    ),
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -576,6 +589,7 @@ async def async_setup_entry(
     async_add_entities(await async_setup_sensors_qemu(hass, config_entry))
     async_add_entities(await async_setup_sensors_lxc(hass, config_entry))
     async_add_entities(await async_setup_sensors_storages(hass, config_entry))
+    async_add_entities(await async_setup_sensors_tasks(hass, config_entry))
 
 
 async def async_setup_sensors_nodes(
@@ -977,3 +991,36 @@ class ProxmoxSensorEntity(ProxmoxEntity, SensorEntity):
             attr: getattr(data, attr, False)
             for attr in self.entity_description.extra_attrs
         }
+
+
+async def async_setup_sensors_tasks(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+) -> list:
+    """Set up task sensors."""
+    sensors = []
+    coordinators = config_entry.runtime_data[COORDINATORS]
+
+    for node in config_entry.data[CONF_NODES]:
+        coordinator_key = f"{ProxmoxType.Tasks}_{node}"
+        if coordinator_key in coordinators:
+            coordinator = coordinators[coordinator_key]
+            for description in PROXMOX_SENSOR_TASKS:
+                unique_id = (
+                    f"{config_entry.entry_id}_{coordinator_key}_{description.key}"
+                )
+                sensors.append(
+                    ProxmoxSensorEntity(
+                        coordinator=coordinator,
+                        info_device=device_info(
+                            hass=hass,
+                            config_entry=config_entry,
+                            api_category=ProxmoxType.Node,
+                            node=node,
+                        ),
+                        description=description,
+                        unique_id=unique_id,
+                    )
+                )
+
+    return sensors

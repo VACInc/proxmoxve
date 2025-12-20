@@ -133,3 +133,14 @@ class ProxmoxDiskData:
     life_left: int | UndefinedType
     power_loss: int | UndefinedType
     disk_wearout: float | UndefinedType
+
+
+@dataclasses.dataclass
+class ProxmoxTaskData:
+    """Data parsed from the Proxmox API for Tasks."""
+
+    type: str
+    node: str
+    failed_count: int
+    recent_failures: list[dict[str, str | int]] | UndefinedType
+    last_failure_time: int | UndefinedType

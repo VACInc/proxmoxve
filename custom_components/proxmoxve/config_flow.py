@@ -32,6 +32,7 @@ from .const import (
     CONF_QEMU,
     CONF_REALM,
     CONF_STORAGE,
+    CONF_TASKS_ENABLE,
     CONF_TOKEN_NAME,
     CONF_VMS,
     COORDINATORS,
@@ -290,6 +291,12 @@ class ProxmoxOptionsFlowHandler(config_entries.OptionsFlow):
                                 CONF_DISKS_ENABLE, True
                             ),
                         ): selector.BooleanSelector(),
+                        vol.Optional(
+                            CONF_TASKS_ENABLE,
+                            default=self.config_entry.options.get(
+                                CONF_TASKS_ENABLE, True
+                            ),
+                        ): selector.BooleanSelector(),
                     }
                 ),
             )
@@ -309,7 +316,10 @@ class ProxmoxOptionsFlowHandler(config_entries.OptionsFlow):
             }
         )
 
-        options_data = {CONF_DISKS_ENABLE: user_input.get(CONF_DISKS_ENABLE)}
+        options_data = {
+            CONF_DISKS_ENABLE: user_input.get(CONF_DISKS_ENABLE),
+            CONF_TASKS_ENABLE: user_input.get(CONF_TASKS_ENABLE),
+        }
 
         self.hass.config_entries.async_update_entry(
             self.config_entry, data=config_data, options=options_data
@@ -945,6 +955,10 @@ class ProxmoxVEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                             CONF_DISKS_ENABLE,
                             default=True,
                         ): selector.BooleanSelector(),
+                        vol.Optional(
+                            CONF_TASKS_ENABLE,
+                            default=True,
+                        ): selector.BooleanSelector(),
                     }
                 ),
             )
@@ -988,7 +1002,10 @@ class ProxmoxVEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_create_entry(
             title=(f"{self._config[CONF_HOST]}:{self._config[CONF_PORT]}"),
             data=self._config,
-            options={CONF_DISKS_ENABLE: user_input.get(CONF_DISKS_ENABLE)},
+            options={
+                CONF_DISKS_ENABLE: user_input.get(CONF_DISKS_ENABLE),
+                CONF_TASKS_ENABLE: user_input.get(CONF_TASKS_ENABLE),
+            },
         )
 
     @staticmethod

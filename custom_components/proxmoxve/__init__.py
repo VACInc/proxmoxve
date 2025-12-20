@@ -49,6 +49,7 @@ from .const import (
     CONF_QEMU,
     CONF_REALM,
     CONF_STORAGE,
+    CONF_TASKS_ENABLE,
     CONF_TOKEN_NAME,
     CONF_VMS,
     COORDINATORS,
@@ -68,6 +69,7 @@ from .coordinator import (
     ProxmoxNodeCoordinator,
     ProxmoxQEMUCoordinator,
     ProxmoxStorageCoordinator,
+    ProxmoxTaskCoordinator,
     ProxmoxUpdateCoordinator,
     ProxmoxZFSCoordinator,
 )
@@ -375,7 +377,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
                         (
                             DOMAIN,
                             (
-                                f"{config_entry.entry_id}_{ProxmoxType.Disk.upper()}_{node}_{disk["wwn"] if "wwn" in disk else disk["by_id_link"] if "by_id_link" in disk else disk["serial"]}"
+                                f"{config_entry.entry_id}_{ProxmoxType.Disk.upper()}_{node}_{disk['wwn'] if 'wwn' in disk else disk['by_id_link'] if 'by_id_link' in disk else disk['serial']}"
                             ),
                         )
                     },
@@ -426,7 +428,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
                         (
                             DOMAIN,
                             (
-                                f"{config_entry.entry_id}_{ProxmoxType.Disk.upper()}_{node}_{disk["by_id_link"] if "by_id_link" in disk else disk["serial"]}"
+                                f"{config_entry.entry_id}_{ProxmoxType.Disk.upper()}_{node}_{disk['by_id_link'] if 'by_id_link' in disk else disk['serial']}"
                             ),
                         )
                     },
@@ -437,7 +439,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
                         (
                             DOMAIN,
                             (
-                                f"{config_entry.entry_id}_{ProxmoxType.Disk.upper()}_{node}_{disk["wwn"] if "wwn" in disk else disk["by_id_link"] if "by_id_link" in disk else disk["serial"]}"
+                                f"{config_entry.entry_id}_{ProxmoxType.Disk.upper()}_{node}_{disk['wwn'] if 'wwn' in disk else disk['by_id_link'] if 'by_id_link' in disk else disk['serial']}"
                             ),
                         )
                     },
@@ -522,6 +524,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         | ProxmoxQEMUCoordinator
         | ProxmoxLXCCoordinator
         | ProxmoxStorageCoordinator
+        | ProxmoxTaskCoordinator
         | ProxmoxUpdateCoordinator
         | list[ProxmoxDiskCoordinator]
         | list[ProxmoxZFSCoordinator],
@@ -560,6 +563,16 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
             )
             await coordinator_updates.async_refresh()
             coordinators[f"{ProxmoxType.Update}_{node}"] = coordinator_updates
+
+            if config_entry.options.get(CONF_TASKS_ENABLE, True):
+                coordinator_tasks = ProxmoxTaskCoordinator(
+                    hass=hass,
+                    proxmox=proxmox,
+                    api_category=ProxmoxType.Tasks,
+                    node_name=node,
+                )
+                await coordinator_tasks.async_refresh()
+                coordinators[f"{ProxmoxType.Tasks}_{node}"] = coordinator_tasks
 
             if config_entry.options.get(CONF_DISKS_ENABLE, True):
                 try:
