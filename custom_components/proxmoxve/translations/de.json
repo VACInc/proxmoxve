@@ -37,15 +37,15 @@
                 }
             },
             "reconfigure": {
-                "description": "Proxmox host information",
+                "description": "Informationen zum Proxmox-Host",
                 "data": {
                     "host": "Host",
-                    "password": "Password or token value",
-                    "token_name": "Token name",
+                    "password": "Passwort oder Token-Wert",
+                    "token_name": "Token-Name",
                     "port": "Port",
                     "realm": "Realm",
-                    "username": "Username",
-                    "verify_ssl": "Verify SSL certificate"
+                    "username": "Benutzername",
+                    "verify_ssl": "SSL-Zertifikat verifizieren"
                 }
             }
         },
@@ -60,7 +60,7 @@
             "already_configured": "Das Gerät ist bereits konfiguriert",
             "no_resources": "Es wurden keine Ressourcen für diese Instanz zurückgegeben.",
             "reauth_successful": "Die erneute Authentifizierung war erfolgreich",
-            "reconfigure_successful": "Reconfiguration completed successfully."
+            "reconfigure_successful": "Rekonfiguration erfolgreich."
         }
     },
     "issues": {
@@ -136,7 +136,7 @@
                 "description": "Proxmox Host-Informationen"
             },
             "change_expose": {
-                "description": "Select the Proxmox instance nodes and Virtual Machines (QEMU) and Containers (LXC) you want to expose",
+                "description": "Wähle die Proxmox-Instanz-Knoten, virtuellen Maschinen (QEMU) und Container (LXC), die du bereitstellen möchtest",
                 "data": {
                     "lxc": "Linux-Container (LXC)",
                     "nodes": "Knoten",
@@ -245,19 +245,19 @@
                 "name": "Life left"
             },
             "zfs_health": {
-                "name": "Health"
+                "name": "Zustand"
             },
             "zfs_free_perc": {
-                "name": "Free percentage"
+                "name": "Prozent freier Speicher"
             },
             "zfs_total": {
-                "name": "Total"
+                "name": "Speicher gesamt"
             },
             "zfs_used": {
-                "name": "Used"
+                "name": "Speicher belegt"
             },
             "zfs_used_perc": {
-                "name": "Used percentage"
+                "name": "Prozent belegter Speicher"
             },
             "lxc_on": {
                 "name": "Container laufen",
@@ -301,7 +301,7 @@
                 "name": "Betriebsstunden"
             },
             "qemu_on": {
-                "name": "Virtual machines running",
+                "name": "Laufende virtuelle Maschinen",
                 "state_attributes": {
                     "qemu_on_list": {
                         "name": "Liste der virtuellen Maschinen"
