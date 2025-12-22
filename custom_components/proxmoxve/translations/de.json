@@ -257,7 +257,7 @@
                 }
             },
             "life_left": {
-                "name": "Life left"
+                "name": "Leben verbleibend"
             },
             "zfs_health": {
                 "name": "Zustand"
