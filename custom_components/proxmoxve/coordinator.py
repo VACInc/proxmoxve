@@ -29,6 +29,7 @@ from .api import get_api
 from .const import CONF_NODE, DOMAIN, LOGGER, UPDATE_INTERVAL, ProxmoxType
 from .models import (
     ProxmoxDiskData,
+    ProxmoxHAResourceData,
     ProxmoxLXCData,
     ProxmoxNodeData,
     ProxmoxStorageData,
@@ -56,6 +57,76 @@ class ProxmoxCoordinator(
     ]
 ):
     """Proxmox VE data update coordinator."""
+
+
+class ProxmoxHACoordinator(
+    DataUpdateCoordinator[dict[str, ProxmoxHAResourceData]]
+):
+    """Proxmox VE HA (High Availability) resources coordinator.
+
+    Polls cluster/ha/resources once and provides HA state for all managed resources.
+    The data dict is keyed by SID (e.g., "ct:100", "vm:101").
+    """
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        proxmox: ProxmoxAPI,
+    ) -> None:
+        """Initialize the Proxmox HA coordinator."""
+        super().__init__(
+            hass,
+            LOGGER,
+            name="proxmox_coordinator_ha_resources",
+            update_interval=timedelta(seconds=UPDATE_INTERVAL),
+        )
+
+        self.hass = hass
+        self.config_entry: ConfigEntry = self.config_entry
+        self.proxmox = proxmox
+
+    async def _async_update_data(self) -> dict[str, ProxmoxHAResourceData]:
+        """Update data for Proxmox HA resources."""
+        api_path = "cluster/ha/resources"
+        ha_resources = await self.hass.async_add_executor_job(
+            poll_api,
+            self.hass,
+            self.config_entry,
+            self.proxmox,
+            api_path,
+            ProxmoxType.Resources,
+            None,
+            False,
+        )
+
+        result: dict[str, ProxmoxHAResourceData] = {}
+        for resource in ha_resources if ha_resources is not None else []:
+            sid = resource.get("sid", "")
+            # Parse type and vmid from SID (e.g., "ct:100" -> type="ct", vmid=100)
+            parts = sid.split(":")
+            if len(parts) == 2:
+                res_type = parts[0]
+                try:
+                    vmid = int(parts[1])
+                except ValueError:
+                    continue
+            else:
+                continue
+
+            result[sid] = ProxmoxHAResourceData(
+                sid=sid,
+                type=res_type,
+                vmid=vmid,
+                state=resource.get("state", "started"),
+                group=resource.get("group"),
+                status=resource.get("status"),
+                request_state=resource.get("request_state"),
+                max_relocate=resource.get("max_relocate"),
+                max_restart=resource.get("max_restart"),
+                digest=resource.get("digest"),
+            )
+
+        return result
 
 
 class ProxmoxNodeCoordinator(ProxmoxCoordinator):

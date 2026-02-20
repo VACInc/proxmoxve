@@ -185,6 +185,17 @@
           "name": "Updates packages"
         }
       },
+      "select": {
+        "ha_state": {
+          "name": "HA state",
+          "state": {
+            "started": "Started",
+            "ignored": "Ignored",
+            "disabled": "Disabled",
+            "stopped": "Stopped"
+          }
+        }
+      },
       "button": {
         "start_all": {
           "name": "Start all"

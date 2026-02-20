@@ -69,6 +69,15 @@ class ProxmoxCommand(StrEnum):
     WAKEONLAN = "wakeonlan"
 
 
+class ProxmoxHAState(StrEnum):
+    """Proxmox HA resource states."""
+
+    STARTED = "started"
+    IGNORED = "ignored"
+    DISABLED = "disabled"
+    STOPPED = "stopped"
+
+
 class ProxmoxKeyAPIParse(StrEnum):
     """Proxmox key of data API parse."""
 

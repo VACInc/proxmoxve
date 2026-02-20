@@ -97,6 +97,17 @@ def post_api(
     return api_result
 
 
+def put_api(
+    proxmox: ProxmoxAPI,
+    api_path: str,
+    **kwargs: Any,
+) -> dict[str, Any] | None:
+    """Put data to Proxmox API."""
+    api_result = proxmox.set(api_path, **kwargs)
+    LOGGER.debug("API PUT - %s (params=%s): %s", api_path, kwargs, api_result)
+    return api_result
+
+
 def post_api_command(
     self,
     proxmox_client: ProxmoxClient,

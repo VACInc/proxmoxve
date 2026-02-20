@@ -65,6 +65,7 @@ from .const import (
 )
 from .coordinator import (
     ProxmoxDiskCoordinator,
+    ProxmoxHACoordinator,
     ProxmoxLXCCoordinator,
     ProxmoxNodeCoordinator,
     ProxmoxQEMUCoordinator,
@@ -83,6 +84,7 @@ if TYPE_CHECKING:
 PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
+    Platform.SELECT,
     Platform.SENSOR,
 ]
 
@@ -526,12 +528,21 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         | ProxmoxStorageCoordinator
         | ProxmoxTaskCoordinator
         | ProxmoxUpdateCoordinator
+        | ProxmoxHACoordinator
         | list[ProxmoxDiskCoordinator]
         | list[ProxmoxZFSCoordinator],
     ] = {}
     nodes_add_device = []
 
     resources = await hass.async_add_executor_job(get_api, proxmox, "cluster/resources")
+
+    # Initialize HA (High Availability) resources coordinator
+    coordinator_ha = ProxmoxHACoordinator(
+        hass=hass,
+        proxmox=proxmox,
+    )
+    await coordinator_ha.async_refresh()
+    coordinators[f"{ProxmoxType.Resources}_ha"] = coordinator_ha
 
     nodes_api = await hass.async_add_executor_job(get_api, proxmox, "nodes")
     for node in config_entry.data[CONF_NODES]:

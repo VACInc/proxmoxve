@@ -144,3 +144,19 @@ class ProxmoxTaskData:
     failed_count: int
     recent_failures: list[dict[str, str | int]] | UndefinedType
     last_failure_time: int | UndefinedType
+
+
+@dataclasses.dataclass
+class ProxmoxHAResourceData:
+    """Data parsed from the Proxmox API for a single HA resource."""
+
+    sid: str
+    type: str
+    vmid: int
+    state: str
+    group: str | None
+    status: str | None
+    request_state: str | None
+    max_relocate: int | None
+    max_restart: int | None
+    digest: str | None
