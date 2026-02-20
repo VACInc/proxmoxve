@@ -15,6 +15,7 @@ After configuring this integration, the following information is available:
  - Sensor entities of the selected node and virtual machines/containers. Some sensors are created disabled by default, you can enable them by accessing the entity's configuration.
  - **Failed task monitoring sensors** that track failed tasks from the last 24 hours on selected nodes, showing the count of failures and details about recent failed tasks.
  - Entities button to control selected virtual machines/containers (see about Proxmox user permissions below). By default, the entities buttons to control virtual machines/containers are created disabled, [see how to enable them here](https://github.com/dougiteixeira/proxmoxve/#disabled-entities).
+ - Select entities to set Proxmox HA state (`started`, `ignored`, `disabled`, `stopped`) for HA-managed VMs and CTs.
 
 ### Failed Task Monitoring
 

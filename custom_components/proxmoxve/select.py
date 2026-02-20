@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from functools import partial
 from typing import TYPE_CHECKING, Final
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
@@ -16,13 +17,11 @@ from .const import (
     CONF_LXC,
     CONF_QEMU,
     COORDINATORS,
-    DOMAIN,
     LOGGER,
     PROXMOX_CLIENT,
     ProxmoxHAState,
     ProxmoxType,
 )
-from .coordinator import ProxmoxHACoordinator
 from .entity import ProxmoxEntity, ProxmoxEntityDescription
 
 if TYPE_CHECKING:
@@ -30,6 +29,8 @@ if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
     from homeassistant.helpers.device_registry import DeviceInfo
     from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from .coordinator import ProxmoxHACoordinator
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -87,7 +88,6 @@ async def async_setup_entry(
                 unique_id=f"{config_entry.entry_id}_{vm_id}_ha_state",
                 proxmox_client=proxmox_client,
                 sid=sid,
-                config_entry=config_entry,
             )
         )
 
@@ -111,7 +111,6 @@ async def async_setup_entry(
                 unique_id=f"{config_entry.entry_id}_{ct_id}_ha_state",
                 proxmox_client=proxmox_client,
                 sid=sid,
-                config_entry=config_entry,
             )
         )
 
@@ -131,7 +130,6 @@ class ProxmoxHASelectEntity(ProxmoxEntity, SelectEntity):
         unique_id: str,
         proxmox_client: ProxmoxClient,
         sid: str,
-        config_entry: ConfigEntry,
     ) -> None:
         """Create the select entity for HA state management."""
         super().__init__(ha_coordinator, unique_id, description)
@@ -139,7 +137,6 @@ class ProxmoxHASelectEntity(ProxmoxEntity, SelectEntity):
         self._attr_device_info = info_device
         self._proxmox_client = proxmox_client
         self._sid = sid
-        self.config_entry = config_entry
 
     @property
     def current_option(self) -> str | None:
@@ -171,10 +168,7 @@ class ProxmoxHASelectEntity(ProxmoxEntity, SelectEntity):
 
         try:
             await self.hass.async_add_executor_job(
-                put_api,
-                proxmox,
-                api_path,
-                state=option,
+                partial(put_api, proxmox, api_path, state=option)
             )
         except ResourceException as error:
             msg = f"Failed to set HA state for {self._sid} to {option}: {error}"

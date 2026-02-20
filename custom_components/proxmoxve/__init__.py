@@ -540,8 +540,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     coordinator_ha = ProxmoxHACoordinator(
         hass=hass,
         proxmox=proxmox,
+        config_entry=config_entry,
     )
-    await coordinator_ha.async_refresh()
+    await coordinator_ha.async_config_entry_first_refresh()
     coordinators[f"{ProxmoxType.Resources}_ha"] = coordinator_ha
 
     nodes_api = await hass.async_add_executor_job(get_api, proxmox, "nodes")

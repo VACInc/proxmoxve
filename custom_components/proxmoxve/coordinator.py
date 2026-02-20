@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import time
 from datetime import datetime, timedelta
+from functools import partial
 from typing import TYPE_CHECKING, Any
 from zoneinfo import ZoneInfo
 
@@ -62,16 +63,13 @@ class ProxmoxCoordinator(
 class ProxmoxHACoordinator(
     DataUpdateCoordinator[dict[str, ProxmoxHAResourceData]]
 ):
-    """Proxmox VE HA (High Availability) resources coordinator.
-
-    Polls cluster/ha/resources once and provides HA state for all managed resources.
-    The data dict is keyed by SID (e.g., "ct:100", "vm:101").
-    """
+    """Proxmox VE HA resources coordinator keyed by SID (for example, `ct:100`)."""
 
     def __init__(
         self,
         hass: HomeAssistant,
         proxmox: ProxmoxAPI,
+        config_entry: ConfigEntry,
     ) -> None:
         """Initialize the Proxmox HA coordinator."""
         super().__init__(
@@ -82,21 +80,23 @@ class ProxmoxHACoordinator(
         )
 
         self.hass = hass
-        self.config_entry: ConfigEntry = self.config_entry
+        self.config_entry = config_entry
         self.proxmox = proxmox
 
     async def _async_update_data(self) -> dict[str, ProxmoxHAResourceData]:
         """Update data for Proxmox HA resources."""
         api_path = "cluster/ha/resources"
         ha_resources = await self.hass.async_add_executor_job(
-            poll_api,
-            self.hass,
-            self.config_entry,
-            self.proxmox,
-            api_path,
-            ProxmoxType.Resources,
-            None,
-            False,
+            partial(
+                poll_api,
+                self.hass,
+                self.config_entry,
+                self.proxmox,
+                api_path,
+                ProxmoxType.Resources,
+                None,
+                issue_crete_permissions=False,
+            )
         )
 
         result: dict[str, ProxmoxHAResourceData] = {}
