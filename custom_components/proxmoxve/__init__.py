@@ -858,6 +858,7 @@ def device_info(
 
     elif api_category in (ProxmoxType.Node, ProxmoxType.Update):
         coordinator = coordinators[f"{ProxmoxType.Node}_{node}"]
+        model_processor = ProxmoxType.Node.capitalize()
         if (coordinator_data := coordinator.data) is not None:
             model_processor = coordinator_data.model
             proxmox_version = f"Proxmox {coordinator_data.version}"
