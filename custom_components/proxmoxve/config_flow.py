@@ -258,6 +258,12 @@ class ProxmoxOptionsFlowHandler(config_entries.OptionsFlow):
                     if "storage" in resource:
                         resource_storage[str(resource["id"])] = resource["id"]
 
+            if not resource_qemu and not resource_lxc:
+                LOGGER.warning(
+                    "No VM/CT resources returned by cluster/resources during options flow. "
+                    "If this is unexpected, check API token permissions (VM.Audit on /vms or /, with proper token privilege settings)."
+                )
+
             return self.async_show_form(
                 step_id="change_expose",
                 data_schema=vol.Schema(
@@ -942,6 +948,12 @@ class ProxmoxVEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         resource_lxc[str(resource["vmid"])] = f"{resource['vmid']}"
                 if ("type" in resource) and (resource["type"] == ProxmoxType.Storage):
                     resource_storage[str(resource["id"])] = f"{resource['id']}"
+
+            if not resource_qemu and not resource_lxc:
+                LOGGER.warning(
+                    "No VM/CT resources returned by cluster/resources during setup flow. "
+                    "If this is unexpected, check API token permissions (VM.Audit on /vms or /, with proper token privilege settings)."
+                )
 
             return self.async_show_form(
                 step_id="expose",

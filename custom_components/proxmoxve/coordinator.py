@@ -86,21 +86,64 @@ class ProxmoxHACoordinator(
     async def _async_update_data(self) -> dict[str, ProxmoxHAResourceData]:
         """Update data for Proxmox HA resources."""
         api_path = "cluster/ha/resources"
-        ha_resources = await self.hass.async_add_executor_job(
-            partial(
-                poll_api,
-                self.hass,
-                self.config_entry,
-                self.proxmox,
-                api_path,
-                ProxmoxType.Resources,
-                None,
-                issue_crete_permissions=False,
+        try:
+            ha_resources = await self.hass.async_add_executor_job(
+                partial(
+                    poll_api,
+                    self.hass,
+                    self.config_entry,
+                    self.proxmox,
+                    api_path,
+                    ProxmoxType.Resources,
+                    None,
+                    issue_crete_permissions=False,
+                )
             )
-        )
+        except ConfigEntryAuthFailed:
+            raise
+        except UpdateFailed as error:
+            LOGGER.debug(
+                "HA resources endpoint unavailable, skipping HA state entities: %s",
+                error,
+            )
+            return {}
+        except Exception as error:
+            LOGGER.debug(
+                "Unexpected HA resources payload/error, skipping HA state entities: %s",
+                error,
+            )
+            return {}
+
+        raw_resources: list[dict[str, Any]]
+        if ha_resources is None:
+            return {}
+
+        if isinstance(ha_resources, list):
+            raw_resources = [
+                resource for resource in ha_resources if isinstance(resource, dict)
+            ]
+        elif isinstance(ha_resources, dict):
+            data = ha_resources.get("data")
+            if isinstance(data, list):
+                raw_resources = [
+                    resource for resource in data if isinstance(resource, dict)
+                ]
+            else:
+                LOGGER.debug(
+                    "Invalid HA resources response shape (dict without list data): %s",
+                    ha_resources,
+                )
+                return {}
+        else:
+            LOGGER.debug(
+                "Invalid HA resources response type (%s): %s",
+                type(ha_resources).__name__,
+                ha_resources,
+            )
+            return {}
 
         result: dict[str, ProxmoxHAResourceData] = {}
-        for resource in ha_resources if ha_resources is not None else []:
+        for resource in raw_resources:
             sid = resource.get("sid", "")
             # Parse type and vmid from SID (e.g., "ct:100" -> type="ct", vmid=100)
             parts = sid.split(":")
